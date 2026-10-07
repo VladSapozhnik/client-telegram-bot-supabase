@@ -1,32 +1,104 @@
-# React + TypeScript + Vite
+# Client Support Chat Application (React + Vite + FSD)
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Фронтенд-приложение панели оператора для чата с клиентами Telegram-бота на базе **React 19**, **Vite 8**, **TypeScript** и архитектурной методологии **Feature-Sliced Design (FSD)**.
 
-Currently, two official plugins are available:
+Интегрировано с базой данных Supabase (PostgreSQL + Realtime) и поддерживает автоматический переключаемый **Mock Demo режим**.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+---
 
-## React Compiler
+## 🚀 Функционал
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+1. **Список клиентов**:
+   - Автоматическая сортировка клиентов по времени последней активности (`last_activity_at DESC`).
+   - Поиск и фильтрация в реальном времени по имени, `@username` или `telegram_id`.
+   - Бейджи статуса синхронизации и индикация непрочитанных/активных диалогов.
+2. **Маршрутизация (TanStack Router)**:
+   - Декларативная типизированная маршрутизация:
+     - `/` — Список клиентов с экраном выбора диалога.
+     - `/client/:clientId` — Активный чат с выбранным клиентом.
+3. **Курсорная пагинация снизу вверх (Reverse Infinite Scroll)**:
+   - При входе в диалог скролл автоматически устанавливается в самый низ (к последним сообщениям).
+   - Подгрузка истории по курсору (`created_at < cursor`) при скролле вверх без скачков экрана (`useChatScroll`).
+4. **Реалтайм сообщения (Supabase Realtime)**:
+   - Подписка через WebSocket на события таблицы `messages`.
+   - Автоматическое обновление кэша **TanStack Query** при поступлении входящих сообщений.
+5. **Двустороннее тестирование диалога**:
+   - Переключатель роли отправителя в форме ввода: отправка от лица **Оператора / Бота** (`sender = 'bot'`) или от лица **Клиента** (`sender = 'client'`).
+6. **Graceful Fallback (Mock Mode)**:
+   - При отсутствии или невалидности учетных данных Supabase приложение автоматически работает в автономном демонстрационном режиме с тестовыми данными.
 
-## Expanding the Oxlint configuration
+---
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+## 🏗 Архитектура проекта (Feature-Sliced Design)
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```
+frontend/src/
+├── app/                              # Инициализация приложения, провайдеры и стили
+│   ├── router/                       # TanStack Router: корневой и дочерние маршруты
+│   ├── App.tsx                       # Точка входа приложения и QueryClientProvider
+│   └── main.tsx                      # Монтирование DOM-дерева
+├── pages/                            # Страницы приложения
+│   └── chat/                         # Страница чата (ChatPage, ChatLayout)
+├── widgets/                          # Композиционные блоки интерфейса
+│   ├── client-list/                  # Виджет левой панели: список клиентов, поиск, статусы
+│   └── chat-area/                    # Виджет активного диалога: заголовок, лента сообщений, ввод
+├── features/                         # Пользовательские сценарии и взаимодействия
+│   ├── send-message/                 # Форма отправки сообщения с переключением роли (bot/client)
+│   └── chat-scroll/                  # Логика якорения и реверсивного скролла (useChatScroll)
+├── entities/                         # Бизнес-сущности
+│   ├── client/                       # Сущность Client: модель, хуки (useClients), UI-карточка
+│   └── message/                      # Сущность Message: модель, хуки (useMessages), бабл сообщения
+└── shared/                           # Переиспользуемый инфраструктурный слой
+    ├── api/                          # Supabase клиент, mock-хранилище, контракты запросов
+    ├── lib/                          # Утилиты форматирования дат, стилей (clsx, tailwind-merge)
+    ├── types/                        # Общие TypeScript типы (Client, Message, Sender)
+    └── ui/                           # Базовые UI-компоненты (Input, Button, ScrollArea, Avatar)
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+---
+
+## ⚙️ Настройка и окружение
+
+Создайте файл `.env` в корне папки `frontend` (на основе `.env.example` при наличии):
+
+```env
+VITE_SUPABASE_URL="https://<ВАШ_ПРОЕКТ>.supabase.co"
+VITE_SUPABASE_ANON_KEY="ваш_anon_ключ_supabase"
+```
+
+> **Режим Demo / Mock**:
+> Если переменные окружения не заданы или имеют дефолтные тестовые значения, приложение автоматически запускается на локальном Mock-хранилище с готовым списком пользователей и сообщениями. Индикатор статуса отображается в верхней панели.
+
+---
+
+## 🛠 Запуск и разработка
+
+### 1. Установка зависимостей
+```bash
+pnpm install
+```
+
+### 2. Запуск локального dev-сервера
+```bash
+pnpm dev
+```
+По умолчанию приложение откроется по адресу `http://localhost:5173`.
+
+### 3. Линтинг кода
+Проект использует сверхбыстрый линтер **Oxlint**:
+```bash
+pnpm lint
+```
+
+### 4. Сборка для production
+```bash
+pnpm build
+```
+
+---
+
+## 🔗 Интеграция с бэкендом
+
+Фронтенд напрямую взаимодействует со следующими таблицами Supabase:
+- `clients`: чтение списка пользователей (`id`, `telegram_id`, `first_name`, `username`, `last_activity_at`).
+- `messages`: выборка истории с пагинацией и вставка сообщений (`id`, `client_id`, `sender`, `text`, `created_at`).
