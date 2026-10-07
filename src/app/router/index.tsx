@@ -5,6 +5,7 @@ import {
   Outlet,
 } from "@tanstack/react-router"
 import { ChatPage } from "@/pages/chat/ui/ChatPage"
+import { ArticlesPage } from "@/pages/articles/ui/ArticlesPage"
 
 // Root route
 const rootRoute = createRootRoute({
@@ -25,10 +26,20 @@ const clientRoute = createRoute({
   component: ChatPage,
 })
 
-const routeTree = rootRoute.addChildren([indexRoute, clientRoute])
+// Articles route
+const articlesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/articles",
+  component: ArticlesPage,
+})
+
+const routeTree = rootRoute.addChildren([indexRoute, clientRoute, articlesRoute])
+
+const basepath = import.meta.env.BASE_URL || "/"
 
 export const router = createRouter({
   routeTree,
+  basepath,
   defaultPreload: "intent",
 })
 

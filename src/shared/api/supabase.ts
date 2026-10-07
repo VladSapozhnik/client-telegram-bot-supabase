@@ -1,6 +1,7 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js"
 import { INITIAL_MOCK_CLIENTS, generateMockHistory } from "./mockData"
-import type { Client, Message, CursorPaginatedMessages } from "@/shared/types"
+import type { Client, Message, CursorPaginatedMessages, Article, CreateArticleInput, UpdateArticleInput } from "@/shared/types"
+
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || ""
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || ""
@@ -93,6 +94,72 @@ class MockBackend {
       this.subscribers.delete(callback)
     }
   }
+
+  // Articles mock support
+  private articles: Article[] = [
+    {
+      id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      title: "Быстрый старт с курсами валют в Telegram",
+      slug: "quickstart-telegram-currency-bot",
+      content: "# Быстрый старт\n\nЭтот бот позволяет получать курсы валют мгновенно. Просто отправьте код валюты (USD, EUR, GBP)!",
+      status: "published",
+      created_at: new Date(Date.now() - 3600000 * 24).toISOString(),
+      updated_at: new Date(Date.now() - 3600000 * 24).toISOString(),
+    },
+    {
+      id: "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+      title: "Архитектура Edge Functions и Supabase Realtime",
+      slug: "edge-functions-supabase-realtime",
+      content: "Подробный обзор взаимодействия Deno Edge Functions и PostgreSQL CDC через Realtime каналы.",
+      status: "draft",
+      created_at: new Date(Date.now() - 3600000 * 6).toISOString(),
+      updated_at: new Date(Date.now() - 3600000 * 2).toISOString(),
+    },
+  ]
+
+  async getArticles(): Promise<Article[]> {
+    return [...this.articles].sort(
+      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    )
+  }
+
+  async getArticleById(id: string): Promise<Article | null> {
+    return this.articles.find((a) => a.id === id) || null
+  }
+
+  async createArticle(input: CreateArticleInput): Promise<Article> {
+    const newArticle: Article = {
+      id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+      title: input.title,
+      slug: input.slug,
+      content: input.content || "",
+      status: input.status || "draft",
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }
+    this.articles.unshift(newArticle)
+    return newArticle
+  }
+
+  async updateArticle(id: string, input: UpdateArticleInput): Promise<Article> {
+    const idx = this.articles.findIndex((a) => a.id === id)
+    if (idx === -1) {
+      throw new Error("Article not found")
+    }
+    const current = this.articles[idx]
+    const updated: Article = {
+      ...current,
+      ...input,
+      updated_at: new Date().toISOString(),
+    }
+    this.articles[idx] = updated
+    return updated
+  }
+
+  async deleteArticle(id: string): Promise<void> {
+    this.articles = this.articles.filter((a) => a.id !== id)
+  }
 }
 
 export const mockBackend = new MockBackend()
+

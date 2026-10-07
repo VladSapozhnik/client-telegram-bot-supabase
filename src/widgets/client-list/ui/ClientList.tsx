@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react"
-import { Search, Users, Wifi, AlertCircle, Bot, Sparkles } from "lucide-react"
+import { Search, Users, AlertCircle, Bot, Sparkles } from "lucide-react"
+
 import { Input } from "@/shared/ui/input"
 import { Skeleton } from "@/shared/ui/skeleton"
 import { Badge } from "@/shared/ui/badge"
@@ -46,7 +47,16 @@ export function ClientList({ selectedClientId, onSelectClient }: ClientListProps
                 Telegram CRM
                 <Sparkles className="w-3 h-3 text-blue-400" />
               </h1>
-              <p className="text-[11px] text-slate-400 font-medium">Диалоги с клиентами</p>
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className="text-[11px] text-slate-400 font-medium">Диалоги</span>
+                <span className="text-slate-600">•</span>
+                <a
+                  href="/articles"
+                  className="text-[11px] text-blue-400 hover:text-blue-300 font-medium hover:underline flex items-center gap-1"
+                >
+                  Статьи
+                </a>
+              </div>
             </div>
           </div>
 

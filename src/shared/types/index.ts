@@ -20,3 +20,30 @@ export interface CursorPaginatedMessages {
   nextCursor: string | null // created_at of earliest message in batch
   hasMore: boolean
 }
+
+export type ArticleStatus = "draft" | "published" | "archived"
+
+export interface Article {
+  id: string
+  title: string
+  slug: string
+  content: string
+  status: ArticleStatus
+  created_at: string
+  updated_at: string
+}
+
+export interface CreateArticleInput {
+  title: string
+  slug: string
+  content: string
+  status?: ArticleStatus
+}
+
+export interface UpdateArticleInput {
+  title?: string
+  slug?: string
+  content?: string
+  status?: ArticleStatus
+}
+
